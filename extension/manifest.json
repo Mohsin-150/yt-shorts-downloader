@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "YT Shorts HD Downloader",
+  "version": "1.0",
+  "description": "Download YouTube Shorts in full resolution with audio.",
+  "permissions": ["scripting", "activeTab", "downloads"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
+  }
+}
