@@ -3,7 +3,7 @@
   "name": "YT Shorts HD Downloader",
   "version": "1.0",
   "description": "Download YouTube Shorts in full resolution with audio.",
-  "permissions": ["scripting", "activeTab", "downloads"],
+  "permissions": ["scripting", "activeTab", "tabs"],
   "host_permissions": [
     "https://www.youtube.com/*",
     "https://youtube.com/*"
@@ -12,6 +12,13 @@
     "default_popup": "popup.html",
     "default_icon": "icon.png"
   },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*", "https://youtube.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
   "icons": {
     "48": "icon.png",
     "128": "icon.png"

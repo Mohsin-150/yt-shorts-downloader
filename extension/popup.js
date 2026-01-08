@@ -1,40 +1,36 @@
 const downloadButton = document.getElementById("download");
 
-downloadButton.addEventListener("click", async () => {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+async function extractVideoId(tab) {
+  if (!tab || !tab.url) {
+    throw new Error("Unable to access the current tab");
+  }
 
-  try {
-    if (!tab || !tab.url) {
-      alert("❌ Unable to access the current tab.");
-      return;
-    }
+  const url = new URL(tab.url);
+  
+  if (!url.hostname.includes("youtube.com") && !url.hostname.includes("youtu.be")) {
+    throw new Error("Please navigate to a YouTube page first");
+  }
 
-    const url = new URL(tab.url);
-    
-    if (!url.hostname.includes("youtube.com") && !url.hostname.includes("youtu.be")) {
-      alert("❌ Please navigate to a YouTube page first.");
-      return;
-    }
+  const isShorts = url.pathname.startsWith("/shorts/");
+  if (!isShorts) {
+    throw new Error("This is not a YouTube Shorts URL.\nPlease open a Shorts video (URL must contain /shorts/)");
+  }
 
-    const isShorts = url.pathname.startsWith("/shorts/");
-    if (!isShorts) {
-      alert("❌ This is not a YouTube Shorts URL.\nPlease open a Shorts video (URL must contain /shorts/).");
-      return;
-    }
+  const pathParts = url.pathname.split("/").filter(part => part.length > 0);
+  const videoId = pathParts[1];
 
-    const pathParts = url.pathname.split("/").filter(part => part.length > 0);
-    const videoId = pathParts[1];
+  if (!videoId || videoId.length < 10) {
+    throw new Error("Could not extract a valid video ID from the URL");
+  }
 
-    if (!videoId || videoId.length < 10) {
-      alert("❌ Could not extract a valid video ID from the URL.");
-      return;
-    }
+  return videoId;
+}
 
-    downloadButton.disabled = true;
-    downloadButton.textContent = "Downloading...";
-
-    const apiUrl = `https://your-backend-url/api/download?id=${videoId}`;
-
+async function downloadViaBackend(videoId) {
+  const backendUrl = "https://your-backend-url/api/download";
+  const apiUrl = `${backendUrl}?id=${videoId}`;
+  
+  return new Promise((resolve, reject) => {
     chrome.downloads.download(
       { 
         url: apiUrl,
@@ -42,18 +38,41 @@ downloadButton.addEventListener("click", async () => {
       },
       (downloadId) => {
         if (chrome.runtime.lastError) {
-          console.error("Download error:", chrome.runtime.lastError);
-          alert("❌ Download failed. Please configure a valid backend URL in popup.js");
+          reject(new Error(chrome.runtime.lastError.message));
         } else {
-          console.log("Download started with ID:", downloadId);
+          resolve(downloadId);
         }
-        downloadButton.disabled = false;
-        downloadButton.textContent = "Download Shorts in HD";
       }
     );
+  });
+}
+
+async function openDownloadHelper(videoId) {
+  const downloadUrl = `https://www.y2mate.com/youtube/${videoId}`;
+  await chrome.tabs.create({ url: downloadUrl });
+}
+
+downloadButton.addEventListener("click", async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+  try {
+    downloadButton.disabled = true;
+    downloadButton.textContent = "Processing...";
+
+    const videoId = await extractVideoId(tab);
+    
+    alert(`📹 Video ID: ${videoId}\n\n` +
+          `Due to YouTube's restrictions, this extension will open a download helper website.\n\n` +
+          `Click OK to continue to the download page.`);
+    
+    await openDownloadHelper(videoId);
+    
+    downloadButton.disabled = false;
+    downloadButton.textContent = "Download Shorts in HD";
+    
   } catch (err) {
     console.error("Error processing download:", err);
-    alert("❌ Failed to process download request.\nError: " + err.message);
+    alert("❌ " + err.message);
     downloadButton.disabled = false;
     downloadButton.textContent = "Download Shorts in HD";
   }
