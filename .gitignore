@@ -1,0 +1,27 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary Files
+*.log
+*.tmp
+
+# Build and Package Files
+*.zip
+*.crx
+*.pem
+
+# Node modules (if using build tools)
+node_modules/
+package-lock.json
+
+# Environment Files
+.env
+.env.local
