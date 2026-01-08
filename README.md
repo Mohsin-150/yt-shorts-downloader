@@ -36,16 +36,23 @@ A Chrome extension that allows you to download YouTube Shorts videos in high def
 
 3. Click the "Download Shorts in HD" button
 
-4. The video will be downloaded to your default downloads folder
+4. The extension will open a download helper website in a new tab
+
+5. On the helper website, follow the instructions to download your video
+
+### Why does it open a website?
+
+Due to YouTube's technical restrictions and terms of service, Chrome extensions cannot directly download YouTube videos. This extension extracts the video ID and opens a trusted third-party download service that handles the actual video processing and download.
 
 ## Configuration
 
-### Backend Setup
+### Using Your Own Backend (Optional)
 
-This extension requires a backend API to process and serve the video downloads. You need to:
+If you want to use your own backend instead of the helper website:
 
 1. Set up a backend server that can fetch YouTube Shorts videos
-2. Update the `apiUrl` in `extension/popup.js` (line 15) with your backend URL
+2. Update the `openDownloadHelper` function in `extension/popup.js` to use your backend URL
+3. Uncomment the `downloadViaBackend` function call
 
 Example backend endpoint format:
 ```
@@ -53,9 +60,9 @@ https://your-backend-url/api/download?id={videoId}
 ```
 
 The backend should:
-- Accept a `id` parameter with the YouTube video ID
-- Return the video file as a downloadable response
-- Handle YouTube API authentication and video extraction
+- Accept an `id` parameter with the YouTube video ID
+- Return the video file as a downloadable response with proper CORS headers
+- Handle YouTube video extraction (e.g., using yt-dlp or similar tools)
 
 ## Development
 
@@ -66,9 +73,12 @@ yt-shorts-downloader/
 ├── extension/
 │   ├── manifest.json    # Extension configuration
 │   ├── popup.html       # Extension popup UI
-│   ├── popup.js         # Download logic
+│   ├── popup.js         # Main download logic
+│   ├── content.js       # Content script for YouTube pages
+│   ├── config.js        # Configuration options
 │   └── icon.png         # Extension icon
-└── README.md
+├── .gitignore          # Git ignore file
+└── README.md           # Documentation
 ```
 
 ### Technical Details
@@ -77,7 +87,8 @@ yt-shorts-downloader/
 - **Permissions**: 
   - `scripting`: For tab interaction
   - `activeTab`: To access current tab information
-  - `downloads`: To trigger file downloads
+  - `tabs`: To open new tabs with download helper
+- **Content Scripts**: Injected into YouTube pages for video data extraction
 
 ### Modifying the Extension
 
@@ -89,8 +100,25 @@ yt-shorts-downloader/
 ## Limitations
 
 - Only works on YouTube Shorts URLs (URLs containing `/shorts/`)
-- Requires a backend API for video processing
+- Opens a third-party download helper website (cannot download directly due to YouTube restrictions)
 - Subject to YouTube's Terms of Service
+- Download quality depends on the helper service used
+
+## Troubleshooting
+
+### "0 bytes" or "Connection Error"
+
+This issue occurs if:
+1. The extension is trying to use a non-existent backend URL
+2. The current version opens a helper website instead, which solves this issue
+3. If you configured a custom backend, ensure it's running and accessible
+
+### Extension Not Working
+
+1. Make sure you're on a YouTube Shorts page (URL must contain `/shorts/`)
+2. Reload the extension from `chrome://extensions/`
+3. Check the browser console for error messages
+4. Ensure you granted all required permissions
 
 ## License
 
