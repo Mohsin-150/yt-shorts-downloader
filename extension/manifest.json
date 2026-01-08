@@ -4,8 +4,16 @@
   "version": "1.0",
   "description": "Download YouTube Shorts in full resolution with audio.",
   "permissions": ["scripting", "activeTab", "downloads"],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://youtube.com/*"
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": "icon.png"
+  },
+  "icons": {
+    "48": "icon.png",
+    "128": "icon.png"
   }
 }
